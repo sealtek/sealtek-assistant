@@ -170,7 +170,7 @@ function dS(){
   var ct=[];fs.forEach(function(f){ct.push(f.api);});ct.push({type:"text",text:txt||"Analizza questo file."});
   hs.push({role:"user",content:ct});
   sT();
-  fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"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","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:SYS,messages:hs})})
+  fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"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","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:SYS,messages:hs})})
   .then(function(r){return r.json();})
   .then(function(d){rT();var rep=(d.content&&d.content[0])?d.content[0].text:"Errore. Riprova.";hs.push({role:"assistant",content:rep});aM("b",rep,null);})
   .catch(function(){rT();aM("b","Errore di connessione. Riprova.",null);})
@@ -198,7 +198,16 @@ function sFB(id){
   .then(function(){var f=document.getElementById("ff"+id);f.innerHTML='<p style="color:#22c55e;font-size:13px;">Proposta inviata a Corrado</p>';setTimeout(function(){f.classList.remove("v");},2000);})
   .catch(function(){alert("Errore invio. Riprova.");});
 }
-function lR(){fetch(GS).then(function(r){return r.json();}).then(function(d){if(d.rules&&d.rules.length>0&&hs.length===0){var rt=d.rules.map(function(r){return "- ["+r.tipo+"] "+r.regola;}).join("\n");hs.push({role:"user",content:"[REGOLE APPROVATE]:\n"+rt});hs.push({role:"assistant",content:"Regole caricate. Pronto."});}}).catch(function(){});}
+function lR(){fetch(GS).then(function(r){return r.json();}).then(function(d){
+  // Carica system prompt dinamico se presente
+  if(d.system_prompt && d.system_prompt.length > 50){SYS=d.system_prompt;}
+  // Carica regole approvate
+  if(d.rules&&d.rules.length>0&&hs.length===0){
+    var rt=d.rules.map(function(r){return "- ["+r.tipo+"] "+r.regola;}).join("\n");
+    hs.push({role:"user",content:"[REGOLE APPROVATE DA CORRADO]:\n"+rt});
+    hs.push({role:"assistant",content:"Regole caricate. Pronto."});
+  }
+}).catch(function(){});}
 </script>
 </body>
 </html>
