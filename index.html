@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sealtek — Assistente Tecnico</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f4f0;--surface:#fff;--surface2:#f0eeea;--border:#dddad4;--text:#1a1916;--text2:#6b6860;--text3:#9b9890;--accent:#c8390a;--mono:"DM Mono",monospace;--sans:"DM Sans",sans-serif;--radius:12px;--rsm:6px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{width:36px;height:36px;background:var(--accent);border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:20px;height:20px}
+.htxt h1{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.htxt p{font-size:12px;color:var(--text2)}
+.sdot{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.chat{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.chat::-webkit-scrollbar{width:4px}
+.chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.msg{display:flex;gap:12px;max-width:820px;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{margin-left:auto;flex-direction:row-reverse}
+.av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-top:2px}
+.av.bot{background:var(--accent);color:#fff;font-family:var(--mono)}
+.av.user{background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-size:11px}
+.bub{padding:12px 16px;border-radius:var(--radius);font-size:14px;line-height:1.65;max-width:calc(100% - 44px)}
+.msg.bot .bub{background:var(--surface);border:1px solid var(--border);border-radius:4px var(--radius) var(--radius) var(--radius)}
+.msg.user .bub{background:var(--text);color:#fff;border-radius:var(--radius) 4px var(--radius) var(--radius)}
+.bub strong{font-weight:600}
+.bub code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent)}
+.msg.user .bub code{background:rgba(255,255,255,.15);color:#fff}
+.bub ul,.bub ol{padding-left:18px;margin:6px 0 4px}
+.bub li{margin-bottom:3px}
+.bub p+p{margin-top:8px}
+.typing{display:flex;gap:4px;padding:14px 16px;align-items:center}
+.typing span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:bo 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.fbbar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.fbbtn{font-family:var(--sans);font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:100px;background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s}
+.fbbtn:hover{border-color:var(--accent);color:var(--accent)}
+.fbform{display:none;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;flex-direction:column;gap:8px}
+.fbform.vis{display:flex}
+.fbform select,.fbform textarea{font-family:var(--sans);font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--surface);color:var(--text);outline:none}
+.fbform textarea{resize:none;min-height:60px;line-height:1.5}
+.fbacts{display:flex;gap:8px}
+.fbsub{font-family:var(--sans);font-size:13px;padding:6px 16px;border-radius:var(--rsm);background:var(--accent);color:#fff;border:none;cursor:pointer}
+.fbcan{font-family:var(--sans);font-size:13px;padding:6px 12px;border-radius:var(--rsm);background:transparent;color:var(--text2);border:1px solid var(--border);cursor:pointer}
+.iarea{padding:12px 24px 16px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.iwrap{max-width:820px;margin:0 auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);transition:border-color .15s;overflow:hidden}
+.iwrap:focus-within{border-color:var(--text3)}
+.iwrap.dragover{border-color:var(--accent);background:#fff5f2}
+.astrip{display:none;flex-wrap:wrap;gap:6px;padding:8px 12px 0}
+.astrip.has{display:flex}
+.fchip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:3px 10px 3px 8px;font-size:12px;color:var(--text2)}
+.fchip svg{width:12px;height:12px;flex-shrink:0}
+.rmf{cursor:pointer;color:var(--text3);width:14px;height:14px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:14px;line-height:1}
+.rmf:hover{color:var(--accent)}
+.irow{display:flex;gap:8px;align-items:flex-end;padding:8px}
+.iacts{display:flex;gap:4px;align-items:flex-end}
+textarea{flex:1;font-family:var(--sans);font-size:14px;padding:6px 8px;border:none;background:transparent;color:var(--text);resize:none;outline:none;line-height:1.5;min-height:36px;max-height:140px}
+textarea::placeholder{color:var(--text3)}
+.ibtn{width:36px;height:36px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.ibtn:hover{border-color:var(--text3);color:var(--text);background:var(--surface2)}
+.ibtn svg{width:16px;height:16px}
+.sbtn{width:36px;height:36px;border-radius:var(--rsm);background:var(--text);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sbtn:hover{background:var(--accent)}
+.sbtn:disabled{background:var(--border);cursor:not-allowed}
+.sbtn svg{width:16px;height:16px}
+.disc{font-size:11px;color:var(--text3);text-align:center;margin-top:8px;max-width:820px;margin-left:auto;margin-right:auto}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:32px}
+.wicon{width:64px;height:64px;background:var(--accent);border-radius:16px;display:flex;align-items:center;justify-content:center}
+.wicon svg{width:32px;height:32px}
+.wtitle{text-align:center}
+.wtitle h2{font-size:24px;font-weight:600;letter-spacing:-.03em;margin-bottom:8px}
+.wtitle p{font-size:14px;color:var(--text2);max-width:420px;line-height:1.6}
+.qas{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:520px}
+.qa{padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all .15s;font-family:var(--sans)}
+.qa:hover{border-color:var(--text3);background:var(--surface2);transform:translateY(-1px)}
+.qa .qt{font-size:13px;font-weight:500;margin-bottom:3px}
+.qa .qd{font-size:12px;color:var(--text2)}
+.vmodal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100}
+.vmodal.hidden{display:none}
+.vbox{background:var(--surface);border-radius:var(--radius);padding:28px;width:320px;border:1px solid var(--border)}
+.vbox h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.vbox p{font-size:13px;color:var(--text2);margin-bottom:16px}
+.vbox input{width:100%;font-family:var(--sans);font-size:14px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--bg);color:var(--text);outline:none;margin-bottom:12px}
+.vconf{width:100%;font-family:var(--sans);font-size:14px;padding:10px;border-radius:var(--rsm);background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:500}
+#chat{display:none}
+#chat.vis{display:flex}
+#fi{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="3" fill="white"/><line x1="10" y1="3" x2="10" y2="1" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="19" x2="10" y2="17" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="10" x2="1" y2="10" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="19" y1="10" x2="17" y2="10" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </div>
+  <div class="htxt"><h1>Sealtek — Assistente Tecnico</h1><p>Selezione tenute · Cross-reference · Dimensionamento · Bozze email</p></div>
+  <div class="sdot"><div class="dot"></div><span>Attivo</span></div>
+</header>
+
+<div id="welcome" class="welcome">
+  <div class="wicon"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" stroke="white" stroke-width="2"/><circle cx="16" cy="16" r="5" fill="white"/><line x1="16" y1="5" x2="16" y2="2" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="30" x2="16" y2="27" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="16" x2="2" y2="16" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="30" y1="16" x2="27" y2="16" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div>
+  <div class="wtitle"><h2>Ciao, come posso aiutarti?</h2><p>Scrivi il fluido e le condizioni, allega email o datasheet — trovo la tenuta giusta e preparo la bozza.</p></div>
+  <div class="qas">
+    <button class="qa" id="q1"><div class="qt">Selezione per fluido</div><div class="qd">Dimmi fluido e condizioni</div></button>
+    <button class="qa" id="q2"><div class="qt">Cross-reference concorrenza</div><div class="qd">Equivalente Sealtek</div></button>
+    <button class="qa" id="q3"><div class="qt">Verifica dimensionale</div><div class="qd">Controlla compatibilita</div></button>
+    <button class="qa" id="q4"><div class="qt">Bozza email</div><div class="qd">Risposta al cliente/distributore</div></button>
+  </div>
+</div>
+
+<div id="chat" class="chat"></div>
+
+<div class="iarea">
+  <div class="iwrap" id="iwrap">
+    <div class="astrip" id="astrip"></div>
+    <div class="irow">
+      <textarea id="inp" placeholder="Descrivi l'applicazione, incolla testo email, o allega un file..." rows="1"></textarea>
+      <div class="iacts">
+        <button class="ibtn" id="attbtn" title="Allega file PDF, immagine o Excel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+        <button class="sbtn" id="sbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="fi" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls" multiple>
+  <div class="disc">Verifica sempre la selezione prima di inviarla al cliente &middot; Casi complessi &rarr; escalare a Corrado</div>
+</div>
+
+<div class="vmodal hidden" id="vmodal">
+  <div class="vbox">
+    <h3>Come ti chiami?</h3>
+    <p>Il tuo nome verra associato alle proposte di correzione.</p>
+    <input type="text" id="vinp" placeholder="Es. Marco, Laura...">
+    <button class="vconf" id="vconf">Entra</button>
+  </div>
+</div>
+
+<script>
+var SYS = "Sei l'assistente tecnico di Sealtek S.r.l., azienda italiana produttrice di tenute meccaniche con sede a Vigonza (PD). Aiuti i venditori nella selezione di tenute meccaniche, cross-reference con la concorrenza, verifica dimensionale e bozze di risposta ai clienti.\n\nRispondi in italiano a meno che il venditore non scriva in un'altra lingua. Sii diretto e tecnico. Se non sei sicuro, dillo e suggerisci di escalare a Corrado.\n\nMATERIALI METALLICHE: G = acciaio inox 316L (1.4571) standard. G1 = SAF2205 Duplex. M = Hastelloy C-276. Molle sempre in Hastelloy nelle nostre cartucce.\n\nLETTURA TABELLA BURGMANN: I primi due codici (escludendo V o S tra parentesi) sono le facce rotante/stazionaria. Elastomeri: V=FKM, E=EPDM, K=FFKM, B(Butyl)=FKM, M1/M2=K(FFKM), X=Hyrez(Aflas/Fluoraz797). Q12=U2. Q1 solo per pH 0 o 14, altrimenti Q2. Parti metalliche M: offrire 600NMT(singola) o 606NMT(doppia). Carbonio A=antimonio metallico (se suggerito, mai usare B). Carbonio B=resin non metallico max 130C. 600SL standard ha carbone B. 600API ha carbone A.\n\nSELEZIONE MODELLO: Sempre cartuccia salvo richiesta esplicita componenti. Tipo 1 e 2 = cartucce standard. Tipo 3 standard: Singola: 770 o 600SL (SPINGERE SEMPRE 600SL). Singola quench: 777SO. Doppia: 777SW (default) o 606DFS (slurry denso). 670/677RG = flangia ridotta (2 prigionieri). Tipo 3 API682 (solo se richiesto): 600API o 770API singola, 777API doppia. Plan 21/23 = prefisso PR. Consegna API: 6-8 settimane. Tipo 4: 600NMT/606NMT. Tipo 5: equivalente se noto, altrimenti escalare. Tipo 6: 580/590 componenti, 790/790API singola, 798/798API doppia. Gas seal 877 solo su equivalente. Split: spingere 644 semi-split. Mixer 909 per equipment.\n\nECCEZIONI 600SL: NON proporre se pompa verticale, T>130C con carbone, carbone A richiesto. Con Q2/Q2 o U2/U2 la 600SL va sempre bene.\n\nSINGOLA VS DOPPIA PER VISCOSITA (non pericolosita): Warning 4 solo: 777SO con Q1 diamantato+quench. Warning 3 solo: 777SO con U2/U2. Warning 3+4: 777SO con U2 diamantato. Warning pericolosita (T,T+,F+,1): doppia obbligatoria.\n\nCROSS-REFERENCE: Burgmann CARTEX SE=770/600SL, CARTEX DE=777SW, CARTEX QE=777SO, M7N=Style 557, H7N=Style 557B. JC 5620/ISC2PP=777SW, 480/ISC=770/600SL, 620V=798. Flowserve ISC1PX=770/600SL, ISC/D=777SW.\n\nDIMENSIONAMENTO - Mapping colonne:\n600SL: D3int=colonna D3int (confronta >= D4 bore, tolleranza -4mm con warning), D3ext=D3ext (<= OD cassa), tangente=D5-S (<= DM-M pompa), L=lunghezza FUORI cassa (< LZ). LA 600SL NON ha parti dentro la cassa, non esiste verifica profondita per la 600SL.\n770: D3int=G-10, D3ext=G, D2(corpo in cassa)=D2 (tassativamente < D4, diff<4mm warning circolazione), tangente=R-M, Lprofondita=L3 (< L4 pompa), Ltotale=L4 (< LZ).\n777SW: D3int=G-10, D3ext=G, D1(corpo in cassa)=D1, tangente=R-M, Lprofondita=L5, Ltotale=L6.\nDZ (flangia max) solo se fornito dal cliente. Se tangente uguale: tornire flangia + avvisare distanziale. Se >1mm: non entra. Bussola: chiedere se rimovibile se taglia inferiore ci starebbe. Big Bore BB: codice = diametro albero, prezzo = taglia costruttiva.\n\nCODICI: [Modello][mm] [Frot][Fstat][Elast][Molle][Corpo]. 600SL: rotante=Q2, stazionaria=Carbonio. 770/777SW: rotante=Carbonio, stazionaria=Q2. Kit=K[Modello][mm] [Frot][Fstat][Elast][Molle]. Bussola=BS[Modello][mm] [Corpo].\n\nKIT RICAMBI: base 50%. K(FFKM): 65%. Parti non G/G1: 35%. Non G/G1+K: 50%. Bussola: ~10% a parte.\n\nEMAIL: Distributori: diretto, tecnico, breve. Clienti finali: piu descrittivo. 600SL con plan 02: unica cartuccia al mondo con estensione conica integrata.\n\nESCALARE A CORRADO: Tipo 1 componenti, Tipo 2 >30bar, Tipo 3 >20bar, Tipo 5 senza equiv, Tipo 6 cartuccia non std, T>350C, gas seal non da cross-ref.";
+var API_URL = "https://api.anthropic.com/v1/messages";
+var GS_URL = "https://script.google.com/macros/s/AKfycbxqLQ63M3Dj3qXGmiNYAvYYY6BX0f3EIBYiV1txcDxkpAyohLj5uEKkMnHiW_ehD6I/exec";
+
+var history = [];
+var pending = [];
+var loading = false;
+var fcnt = 0;
+var vname = localStorage.getItem("stk_v") || "";
+
+// Init
+window.addEventListener("load", function() {
+  if (!vname) {
+    document.getElementById("vmodal").classList.remove("hidden");
+    setTimeout(function(){ document.getElementById("vinp").focus(); }, 100);
+  }
+  loadRules();
+  setupEvents();
+});
+
+function setupEvents() {
+  document.getElementById("vconf").addEventListener("click", confirmV);
+  document.getElementById("vinp").addEventListener("keydown", function(e){ if(e.key==="Enter") confirmV(); });
+  document.getElementById("sbtn").addEventListener("click", send);
+  document.getElementById("attbtn").addEventListener("click", function(){ document.getElementById("fi").click(); });
+  document.getElementById("fi").addEventListener("change", onFileSelect);
+  document.getElementById("inp").addEventListener("keydown", function(e){ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} });
+  document.getElementById("inp").addEventListener("input", function(){ autoR(this); });
+  document.getElementById("q1").addEventListener("click", function(){ sendQ("Che tenuta suggerisci per acqua calda a 90C su pompa centrifuga orizzontale?"); });
+  document.getElementById("q2").addEventListener("click", function(){ sendQ("Ho un Burgmann CARTEX SE da sostituire, diametro albero 50mm"); });
+  document.getElementById("q3").addEventListener("click", function(){ sendQ("Verifica dimensionale: albero 50mm, bore 80mm, bolt circle 120mm, bulloni M10, profondita cassa 55mm, spazio libero 80mm"); });
+  document.getElementById("q4").addEventListener("click", function(){ sendQ("Scrivi bozza email per proporre una 600SL per acido solforico diluito a temperatura ambiente"); });
+  
+  var iw = document.getElementById("iwrap");
+  iw.addEventListener("dragover", function(e){ e.preventDefault(); iw.classList.add("dragover"); });
+  iw.addEventListener("dragleave", function(e){ if(!iw.contains(e.relatedTarget)) iw.classList.remove("dragover"); });
+  iw.addEventListener("drop", function(e){
+    e.preventDefault(); iw.classList.remove("dragover");
+    var files = Array.from(e.dataTransfer.files);
+    files.forEach(function(f){ processFile(f).then(function(p){ if(p){pending.push(p);renderChips();} }); });
+  });
+}
+
+function confirmV() {
+  var v = document.getElementById("vinp").value.trim();
+  if (!v) return;
+  vname = v;
+  localStorage.setItem("stk_v", v);
+  document.getElementById("vmodal").classList.add("hidden");
+}
+
+function autoR(el) { el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,140)+"px"; }
+
+function showChat() {
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("chat").classList.add("vis");
+}
+
+function sendQ(txt) {
+  document.getElementById("inp").value = txt;
+  send();
+}
+
+// File handling
+function toB64(file) {
+  return new Promise(function(res, rej) {
+    var r = new FileReader();
+    r.onload = function(){ res(r.result.split(",")[1]); };
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function xlsToText(file) {
+  return new Promise(function(res, rej) {
+    var r = new FileReader();
+    r.onload = function(e) {
+      try {
+        var wb = XLSX.read(e.target.result, {type:"array"});
+        var txt = "";
+        wb.SheetNames.forEach(function(n){ txt += "--- Foglio: "+n+" ---\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n])+"\n"; });
+        res(txt);
+      } catch(err){ rej(err); }
+    };
+    r.onerror = rej;
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function processFile(file) {
+  var ext = file.name.split(".").pop().toLowerCase();
+  if (["jpg","jpeg","png","gif","webp"].indexOf(ext) >= 0) {
+    return toB64(file).then(function(b64){
+      return {name:file.name, type:"image", api:{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}};
+    });
+  } else if (ext === "pdf") {
+    return toB64(file).then(function(b64){
+      return {name:file.name, type:"pdf", api:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}};
+    });
+  } else if (["xlsx","xls"].indexOf(ext) >= 0) {
+    return xlsToText(file).then(function(txt){
+      return {name:file.name, type:"excel", api:{type:"text",text:"[File Excel: "+file.name+"]\n"+txt}};
+    });
+  }
+  return Promise.resolve(null);
+}
+
+function onFileSelect(e) {
+  var files = Array.from(e.target.files);
+  var proms = files.map(function(f){ return processFile(f); });
+  Promise.all(proms).then(function(results){
+    results.forEach(function(p){ if(p){pending.push(p);} });
+    renderChips();
+  });
+  e.target.value = "";
+}
+
+function removeFile(i) { pending.splice(i,1); renderChips(); }
+
+function renderChips() {
+  var strip = document.getElementById("astrip");
+  strip.innerHTML = "";
+  if (pending.length === 0) { strip.classList.remove("has"); return; }
+  strip.classList.add("has");
+  pending.forEach(function(f,i){
+    var c = document.createElement("div"); c.className="fchip";
+    c.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>'+f.name+'</span><span class="rmf" data-i="'+i+'">x</span>';
+    strip.appendChild(c);
+  });
+  strip.querySelectorAll(".rmf").forEach(function(el){
+    el.addEventListener("click", function(){ removeFile(parseInt(el.getAttribute("data-i"))); });
+  });
+}
+
+// Messaging
+function appendMsg(role, text, files) {
+  var chat = document.getElementById("chat");
+  var m = document.createElement("div"); m.className="msg "+role;
+  var av = document.createElement("div"); av.className="av "+role; av.textContent=(role==="bot"?"ST":"TU");
+  var bub = document.createElement("div"); bub.className="bub";
+  if (files && files.length) {
+    files.forEach(function(f){
+      var fp = document.createElement("div");
+      fp.style.cssText="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12px;";
+      fp.innerHTML="<span>📎</span><span>"+f.name+"</span>";
+      bub.appendChild(fp);
+    });
+  }
+  if (role==="bot") {
+    var td = document.createElement("div"); td.innerHTML=renderMD(text); bub.appendChild(td);
+    addFB(bub);
+  } else {
+    if (text) { var td2=document.createElement("div"); td2.textContent=text; bub.appendChild(td2); }
+  }
+  m.appendChild(av); m.appendChild(bub);
+  chat.appendChild(m);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function renderMD(t) {
+  return t
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>")
+    .replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/^#{1,3} (.+)$/gm,"<strong>$1</strong>")
+    .replace(/^\- (.+)$/gm,"<li>$1</li>")
+    .replace(/^(\d+)\. (.+)$/gm,"<li>$2</li>")
+    .replace(/(<li>.*<\/li>
+?)+/g,function(m){return "<ul>"+m+"</ul>";})
+    .replace(/
+
+/g,"</p><p>")
+    .replace(/
+/g,"<br>")
+    .replace(/^(.+)$/,"<p>$1</p>");
+}
+
+function showTyping() {
+  var chat=document.getElementById("chat");
+  var m=document.createElement("div"); m.className="msg bot"; m.id="typ";
+  var av=document.createElement("div"); av.className="av bot"; av.textContent="ST";
+  var b=document.createElement("div"); b.className="bub";
+  b.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  m.appendChild(av); m.appendChild(b); chat.appendChild(m);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function removeTyping() { var el=document.getElementById("typ"); if(el) el.remove(); }
+
+function send() {
+  if (loading) return;
+  var inp = document.getElementById("inp");
+  var txt = inp.value.trim();
+  var files = pending.slice();
+  if (!txt && !files.length) return;
+  showChat();
+  inp.value=""; inp.style.height="auto";
+  pending.length=0; renderChips();
+  loading=true; document.getElementById("sbtn").disabled=true;
+  appendMsg("user", txt, files);
+  var content = [];
+  files.forEach(function(f){ content.push(f.api); });
+  if (txt) content.push({type:"text",text:txt});
+  else content.push({type:"text",text:"Analizza questo file e fornisci la tua raccomandazione tecnica."});
+  history.push({role:"user",content:content});
+  showTyping();
+  fetch(API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:SYS,messages:history})
+  }).then(function(r){ return r.json(); })
+  .then(function(d){
+    removeTyping();
+    var reply = (d.content && d.content[0]) ? d.content[0].text : "Errore nella risposta. Riprova.";
+    history.push({role:"assistant",content:reply});
+    appendMsg("bot", reply, null);
+  })
+  .catch(function(){
+    removeTyping();
+    appendMsg("bot","Errore di connessione. Controlla la rete e riprova.",null);
+  })
+  .finally(function(){
+    loading=false; document.getElementById("sbtn").disabled=false;
+    document.getElementById("inp").focus();
+  });
+}
+
+// Feedback
+function addFB(bub) {
+  var id = ++fcnt;
+  var bar=document.createElement("div"); bar.className="fbbar";
+  var btn=document.createElement("button"); btn.className="fbbtn"; btn.textContent="Proponi correzione";
+  btn.addEventListener("click", function(){ toggleFB(id, btn); });
+  bar.appendChild(btn);
+  var form=document.createElement("div"); form.className="fbform"; form.id="fbf"+id;
+  form.innerHTML='<select id="fbt'+id+'"><option value="Correzione">Correzione tecnica</option><option value="Regola mancante">Regola mancante</option><option value="Risposta incompleta">Risposta incompleta</option><option value="Altro">Altro</option></select><textarea id="fbx'+id+'" placeholder="Descrivi la correzione..."></textarea><div class="fbacts"><button class="fbsub" id="fbs'+id+'">Invia a Corrado</button><button class="fbcan" id="fbc'+id+'">Annulla</button></div>';
+  bub.appendChild(bar); bub.appendChild(form);
+  document.getElementById("fbs"+id).addEventListener("click", function(){ submitFB(id); });
+  document.getElementById("fbc"+id).addEventListener("click", function(){ toggleFB(id, null); });
+}
+
+function toggleFB(id, btn) {
+  var form=document.getElementById("fbf"+id);
+  if (form.classList.contains("vis")) {
+    form.classList.remove("vis");
+  } else {
+    form.classList.add("vis");
+    setTimeout(function(){ document.getElementById("fbx"+id).focus(); },100);
+  }
+}
+
+function submitFB(id) {
+  var tipo=document.getElementById("fbt"+id).value;
+  var testo=document.getElementById("fbx"+id).value.trim();
+  if (!testo) { alert("Scrivi la correzione prima di inviare."); return; }
+  var ctx = history.slice(-4).map(function(m){
+    var r=m.role==="user"?"Venditore":"Chatbot";
+    var c=Array.isArray(m.content)?m.content.filter(function(x){return x.type==="text";}).map(function(x){return x.text;}).join(" "):m.content;
+    return r+": "+(c||"").substring(0,200);
+  }).join("\n");
+  fetch(GS_URL, {method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({venditore:vname||"Sconosciuto",tipo:tipo,proposta:testo,contesto:ctx})
+  }).then(function(){
+    var form=document.getElementById("fbf"+id);
+    form.innerHTML='<p style="color:#22c55e;font-size:13px;">Proposta inviata a Corrado</p>';
+    setTimeout(function(){form.classList.remove("vis");},2000);
+  }).catch(function(){ alert("Errore invio. Riprova."); });
+}
+
+function loadRules() {
+  fetch(GS_URL)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.rules && d.rules.length > 0 && history.length === 0) {
+        var rt = d.rules.map(function(r){ return "- ["+r.tipo+"] "+r.regola; }).join("\n");
+        history.push({role:"user",content:"[REGOLE APPROVATE DA CORRADO]:\n"+rt});
+        history.push({role:"assistant",content:"Ho caricato le regole aggiornate. Sono pronto."});
+      }
+    })
+    .catch(function(){ /* silently ignore */ });
+}
+</script>
+</body>
+</html>
