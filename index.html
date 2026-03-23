@@ -963,8 +963,7 @@ function getConversationContext() {
       ? m.content.filter(c=>c.type==='text').map(c=>c.text).join(' ')
       : m.content;
     return `${role}: ${content.substring(0, 200)}`;
-  }).join('
-');
+  }).join('\n');
 }
 
 function addFeedbackBar(bubbleEl) {
