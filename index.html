@@ -1041,28 +1041,19 @@ async function submitFeedback(id) {
   }
 }
 
-async async function loadApprovedRules() {
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxqLQ63M3Dj3qXGmiNYAvYYY6BX0f3EIBYiV1txcDxkpAyohLj5uEKkMnHiW_ehD6I/exec') return;
-  try {
-    const res = await fetch(APPS_SCRIPT_URL);
-    const data = await res.json();
-    if (data.rules && data.rules.length > 0) {
-      const rulesText = data.rules.map(r => `- [${r.tipo}] ${r.regola}`).join('\n');
-      // Inject as additional context at start of conversation
-      if (conversationHistory.length === 0) {
-        conversationHistory.push({
-          role: 'user',
-          content: `[REGOLE APPROVATE DA CORRADO - applica sempre queste correzioni]:\n${rulesText}`
-        });
-        conversationHistory.push({
-          role: 'assistant',
-          content: 'Ho caricato le regole aggiornate approvate. Sono pronto.'
-        });
+function loadApprovedRules() {
+  fetch(APPS_SCRIPT_URL)
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.rules && data.rules.length > 0) {
+        var rulesText = data.rules.map(function(r) { return '- [' + r.tipo + '] ' + r.regola; }).join('\n');
+        if (conversationHistory.length === 0) {
+          conversationHistory.push({ role: 'user', content: '[REGOLE APPROVATE DA CORRADO]:\n' + rulesText });
+          conversationHistory.push({ role: 'assistant', content: 'Ho caricato le regole aggiornate. Sono pronto.' });
+        }
       }
-    }
-  } catch(err) {
-    console.log('Impossibile caricare regole approvate:', err);
-  }
+    })
+    .catch(function(err) { console.log('Impossibile caricare regole:', err); });
 }
 
 // Initialize
