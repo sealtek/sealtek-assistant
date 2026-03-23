@@ -104,6 +104,8 @@ textarea::placeholder{color:var(--t3)}
 <div class="vm hidden" id="vm"><div class="vb"><h3>Come ti chiami?</h3><p>Il tuo nome verra associato alle proposte di correzione.</p><input type="text" id="vi" placeholder="Es. Marco, Laura..."><button class="vc" id="vc">Entra</button></div></div>
 <script>
 var SYS="Sei l'assistente tecnico di Sealtek S.r.l., azienda italiana produttrice di tenute meccaniche con sede a Vigonza (PD). Aiuti i venditori nella selezione di tenute meccaniche, cross-reference con la concorrenza, verifica dimensionale e bozze di risposta ai clienti. Rispondi in italiano a meno che il venditore non scriva in un altra lingua. Sii diretto e tecnico. Se non sei sicuro, dillo e suggerisci di escalare a Corrado. MATERIALI: G=316L, G1=SAF2205 Duplex, M=Hastelloy C276. Molle sempre Hastelloy. BURGMANN: primi 2 codici=facce (rotante/stazionaria). V=FKM, E=EPDM, K=FFKM, B=FKM, M1/M2=K, X=Hyrez. Q12=U2. Q1 solo pH0 o pH14, altrimenti Q2. M metallico: 600NMT o 606NMT. Carbone A=antimonio metallico (mai usare B se richiesto A). Carbone B=resin max 130C. 600SL ha B standard. 600API ha A standard. SELEZIONE: sempre cartuccia. Tipo 1/2=cartucce std. Tipo 3 std: singola=770 o 600SL (SPINGERE 600SL). Quench=777SO. Doppia=777SW o 606DFS(slurry). 670/677RG=flangia ridotta. API682 solo se richiesto: 600API/770API singola, 777API doppia. Plan 21/23=PR. API=6-8 settimane. Tipo 4: 600NMT/606NMT. Tipo 5: equivalente o escalare. Tipo 6: 580/590 comp, 790 singola, 798 doppia. 877=solo su equivalente. Split: spingere 644 semi-split. 909=mixer. ECCEZIONI 600SL: no pompa verticale, no T>130C con carbone, no carbone A. Con Q2/Q2 o U2/U2 va sempre bene. VISCOSITA: warning 4=777SO+Q1 diamantato. warning 3=777SO+U2. warning 3+4=777SO+U2 diamantato. pericolosita=doppia obbligatoria. CROSS-REF: Burgmann CARTEX SE=770/600SL, CARTEX DE=777SW, CARTEX QE=777SO, M7N=557, H7N=557B. JC 5620=777SW, 480=770/600SL, 620V=798. Flowserve ISC1PX=770/600SL, ISC/D=777SW. DIMENSIONAMENTO 600SL: D3int>=D4(bore, -4mm tolleranza), D3ext<=OD cassa, tangente D5-S<=DM-M, L=lunghezza FUORI cassa < LZ. Nessuna verifica profondita per 600SL. 770: D3int=G-10, D3ext=G, D2<D4(diff<4mm=warning), tangente R-M<=DM-M, L3<L4pompa, L4<LZ. 777SW: D3int=G-10, D3ext=G, D1<D4, tangente R-M<=DM-M, L5<L4pompa, L6<LZ. Se tangente uguale: tornire. Se >1mm: non entra. Big Bore BB: codice=albero, prezzo=taglia costruttiva. CODICI: Modello+mm+Frot+Fstat+Elast+Molle+Corpo. 600SL: rot=Q2, stat=Carbonio. 770/777SW: rot=Carbonio, stat=Q2. Kit=K+cod senza corpo. Bussola=BS+cod+Corpo. KIT: base 50%, K=65%, non G/G1=35%, entrambi=50%. Bussola=10% a parte. EMAIL: distributori=breve e tecnico. clienti=piu descrittivo. 600SL plan02=unica cartuccia con cassa conica integrata. ESCALARE: tipo1 comp, tipo2>30bar, tipo3>20bar, tipo5 senza equiv, tipo6 cart non std, T>350C, gas seal.";
+var BACKEND="https://sealtek-backend.onrender.com";
+var approvedRules=[];
 var GS="https://script.google.com/macros/s/AKfycbxqLQ63M3Dj3qXGmiNYAvYYY6BX0f3EIBYiV1txcDxkpAyohLj5uEKkMnHiW_ehD6I/exec";
 var hs=[],pd=[],ld=false,fc=0,vn=localStorage.getItem("stk_v")||"";
 window.addEventListener("load",function(){
@@ -170,9 +172,9 @@ function dS(){
   var ct=[];fs.forEach(function(f){ct.push(f.api);});ct.push({type:"text",text:txt||"Analizza questo file."});
   hs.push({role:"user",content:ct});
   sT();
-  fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"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","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:SYS,messages:hs})})
+  fetch(BACKEND+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:hs,approved_rules:approvedRules})})
   .then(function(r){return r.json();})
-  .then(function(d){rT();var rep=(d.content&&d.content[0])?d.content[0].text:"Errore. Riprova.";hs.push({role:"assistant",content:rep});aM("b",rep,null);})
+  .then(function(d){rT();var rep=d.reply||d.error||"Errore. Riprova.";hs.push({role:"assistant",content:rep});aM("b",rep,null);})
   .catch(function(){rT();aM("b","Errore di connessione. Riprova.",null);})
   .then(function(){ld=false;document.getElementById("sb").disabled=false;document.getElementById("inp").focus();});
 }
@@ -199,14 +201,8 @@ function sFB(id){
   .catch(function(){alert("Errore invio. Riprova.");});
 }
 function lR(){fetch(GS).then(function(r){return r.json();}).then(function(d){
-  // Carica system prompt dinamico se presente
-  if(d.system_prompt && d.system_prompt.length > 50){SYS=d.system_prompt;}
-  // Carica regole approvate
-  if(d.rules&&d.rules.length>0&&hs.length===0){
-    var rt=d.rules.map(function(r){return "- ["+r.tipo+"] "+r.regola;}).join("\n");
-    hs.push({role:"user",content:"[REGOLE APPROVATE DA CORRADO]:\n"+rt});
-    hs.push({role:"assistant",content:"Regole caricate. Pronto."});
-  }
+  if(d.system_prompt&&d.system_prompt.length>50){SYS=d.system_prompt;}
+  if(d.rules&&d.rules.length>0){approvedRules=d.rules;}
 }).catch(function(){});}
 </script>
 </body>
